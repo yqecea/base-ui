@@ -23,6 +23,7 @@ import {
   isTabbable,
   getNextTabbable,
   getPreviousTabbable,
+  getTabbableNearElement,
 } from './tabbable';
 import type { FocusableElement } from './tabbable';
 import { getNodeAncestors, getNodeChildren } from '../tree/nodes';
@@ -1065,8 +1066,15 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
                 const prevTabbable = getPreviousTabbable(domReference);
                 prevTabbable?.focus();
               } else {
+                // The portal's outside guards unmount with `open` while the popup
+                // may still be mounted for an exit transition. When the trampoline
+                // guard is gone, move past the reference like the guard's redirect
+                // would; a missing anchor falls back to the guard's own position.
                 (
-                  resolveRef(nextFocusableElement) ?? portalContext.afterOutsideRef.current
+                  resolveRef(nextFocusableElement) ??
+                  portalContext.afterOutsideRef.current ??
+                  getTabbableNearElement(domReference, 1, portalContext.portalNode) ??
+                  getTabbableNearElement(event.currentTarget, 1, portalContext.portalNode)
                 )?.focus();
               }
             }

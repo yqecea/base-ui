@@ -1830,6 +1830,103 @@ describe('<Menu.Root />', () => {
       );
 
       it.skipIf(isJSDOM)(
+        'does not lose focus when Tab is pressed while the closing popup is still mounted',
+        async () => {
+          globalThis.BASE_UI_ANIMATIONS_DISABLED = false;
+
+          const { user } = await render(
+            <React.Fragment>
+              <style>
+                {`
+                  .transition-test-indicator {
+                    transition: opacity 100ms ease-out;
+                  }
+
+                  .transition-test-indicator[data-ending-style] {
+                    opacity: 0;
+                  }
+                `}
+              </style>
+              <button>Before</button>
+              <TestMenu popupProps={{ className: 'transition-test-indicator' }} />
+              <button>After</button>
+            </React.Fragment>,
+          );
+
+          const trigger = screen.getByRole('button', { name: 'Toggle' });
+          trigger.focus();
+          await user.keyboard('{Enter}');
+
+          const firstItem = await screen.findByTestId('item-1');
+          await waitFor(() => {
+            expect(firstItem).toHaveFocus();
+          });
+
+          await user.keyboard('[Escape]');
+
+          // The popup stays mounted for the exit transition, so Tab lands before unmount.
+          await waitFor(() => {
+            expect(screen.getByTestId('menu')).toHaveAttribute('data-ending-style');
+          });
+          await user.keyboard('{Tab}');
+
+          await waitFor(() => {
+            expect(screen.queryByRole('menu')).toBe(null);
+          });
+
+          expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+        },
+      );
+
+      it.skipIf(isJSDOM)(
+        'restores focus to the trigger when Shift+Tab is pressed while the closing popup is still mounted',
+        async () => {
+          globalThis.BASE_UI_ANIMATIONS_DISABLED = false;
+
+          const { user } = await render(
+            <React.Fragment>
+              <style>
+                {`
+                  .transition-test-indicator {
+                    transition: opacity 100ms ease-out;
+                  }
+
+                  .transition-test-indicator[data-ending-style] {
+                    opacity: 0;
+                  }
+                `}
+              </style>
+              <button>Before</button>
+              <TestMenu popupProps={{ className: 'transition-test-indicator' }} />
+              <button>After</button>
+            </React.Fragment>,
+          );
+
+          const trigger = screen.getByRole('button', { name: 'Toggle' });
+          trigger.focus();
+          await user.keyboard('{Enter}');
+
+          const firstItem = await screen.findByTestId('item-1');
+          await waitFor(() => {
+            expect(firstItem).toHaveFocus();
+          });
+
+          await user.keyboard('[Escape]');
+
+          await waitFor(() => {
+            expect(screen.getByTestId('menu')).toHaveAttribute('data-ending-style');
+          });
+          await user.keyboard('{Shift>}{Tab}{/Shift}');
+
+          await waitFor(() => {
+            expect(screen.queryByRole('menu')).toBe(null);
+          });
+
+          expect(trigger).toHaveFocus();
+        },
+      );
+
+      it.skipIf(isJSDOM)(
         'focuses the trigger after the menu is closed but not unmounted',
         async () => {
           const { user } = await render(
