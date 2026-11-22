@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Dialog } from '@base-ui/react/dialog';
 import { Drawer } from '@base-ui/react/drawer';
 import { platform } from '@base-ui/utils/platform';
+import { useIsHydrating } from '@base-ui/utils/hydration';
 import { useTimeout } from '@base-ui/utils/useTimeout';
 import { MagnifyingGlassIcon } from 'docs/src/icons/MagnifyingGlassIcon';
 import { loadSearchSitemap } from './Search/searchSitemap';
@@ -49,11 +50,12 @@ export function SearchControls({
   const preloadTimeout = useTimeout();
   const pathname = usePathname();
 
-  const isCmd = React.useSyncExternalStore(
-    () => () => {},
-    () => platform.os.mac,
-    () => true,
-  );
+  const isHydrating = useIsHydrating();
+
+  let modifierKeyLabel = '';
+  if (!isHydrating) {
+    modifierKeyLabel = platform.os.mac ? '⌘' : 'Ctrl+';
+  }
 
   const closeMobileNav = React.useCallback(() => {
     scrollTopAfterMobileCloseRef.current = false;
@@ -190,7 +192,7 @@ export function SearchControls({
       >
         Search
         <span className="SearchTriggerShortcut">
-          ({isCmd ? <kbd>⌘</kbd> : <kbd>Ctrl+</kbd>}
+          (<kbd className="SearchTriggerShortcutModifier">{modifierKeyLabel}</kbd>
           <kbd>k</kbd>)
         </span>
       </Dialog.Trigger>

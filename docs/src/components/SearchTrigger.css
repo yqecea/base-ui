@@ -49,4 +49,9 @@
   .SearchTriggerShortcut {
     color: var(--gray-t1);
   }
+
+  .SearchTriggerShortcutModifier:empty {
+    display: inline-block;
+    min-width: 5ch;
+  }
 }
